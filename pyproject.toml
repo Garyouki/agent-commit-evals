@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agent-commit-evals"
+version = "0.1.0"
+description = "Offline evaluation of agent commit gates under synthetic state changes."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE"]
+dependencies = []
+
+[project.scripts]
+agent-commit-evals = "agent_commit_evals.__main__:main"
+
+[project.urls]
+Repository = "https://github.com/Garyouki/agent-commit-evals"
+
+[tool.setuptools]
+packages = ["agent_commit_evals"]
