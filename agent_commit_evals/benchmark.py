@@ -18,6 +18,9 @@ class GuardInput:
     current_state: Mapping[str, StateValue]
     preconditions: Mapping[str, StateValue]
     effect: Mapping[str, StateValue]
+    claimed_revision: int | None = None
+    """Revision the agent wrote into its proposal. ``observed_revision`` is the
+    revision the runtime recorded when it served the read."""
 
     def __post_init__(self) -> None:
         for name in ("current_state", "preconditions", "effect"):
@@ -64,6 +67,7 @@ def paired_cases() -> tuple[Case, ...]:
                 {"approval": "approved", "published": False, "note": "updated"},
                 approval,
                 publish,
+                claimed_revision=7,
             ),
             True,
         ),
@@ -76,6 +80,7 @@ def paired_cases() -> tuple[Case, ...]:
                 {"approval": "revoked", "published": False, "note": "updated"},
                 approval,
                 publish,
+                claimed_revision=7,
             ),
             False,
         ),
@@ -92,6 +97,7 @@ def paired_cases() -> tuple[Case, ...]:
                 },
                 approval,
                 complete,
+                claimed_revision=11,
             ),
             True,
         ),
@@ -108,10 +114,57 @@ def paired_cases() -> tuple[Case, ...]:
                 },
                 approval,
                 complete,
+                claimed_revision=11,
             ),
             False,
         ),
     )
+
+
+def token_provenance_cases() -> tuple[Case, ...]:
+    """Return one pair in which the agent claims the current revision in both cases.
+
+    In the valid case the runtime served that revision, so the claim is true. In
+    the invalid case the runtime served an older revision, approval was revoked
+    in between, and the agent copied the newer number from a status notice. A
+    guard that trusts the claimed revision cannot tell the two cases apart.
+    """
+    approval = {"approval": "approved"}
+    publish = {"published": True}
+    return (
+        Case(
+            "provenance/read-current",
+            "The agent read the current revision and claims it.",
+            GuardInput(
+                8,
+                8,
+                {"approval": "approved", "published": False, "note": "updated"},
+                approval,
+                publish,
+                claimed_revision=8,
+            ),
+            True,
+        ),
+        Case(
+            "provenance/claimed-unread",
+            "The agent read revision 7, approval was then revoked, and the agent "
+            "claims revision 8 from a status notice.",
+            GuardInput(
+                7,
+                8,
+                {"approval": "revoked", "published": False, "note": "updated"},
+                approval,
+                publish,
+                claimed_revision=8,
+            ),
+            False,
+        ),
+    )
+
+
+def all_cases() -> tuple[Case, ...]:
+    """Return the state-change pairs followed by the token-provenance pair."""
+    return paired_cases() + token_provenance_cases()
 
 
 def allow_all(_view: GuardInput) -> bool:
@@ -120,8 +173,19 @@ def allow_all(_view: GuardInput) -> bool:
 
 
 def revision_guard(view: GuardInput) -> bool:
-    """Allow the action only when the record revision has not changed."""
+    """Allow the action only when the revision the runtime served is still current."""
     return view.observed_revision == view.current_revision
+
+
+def claimed_revision_guard(view: GuardInput) -> bool:
+    """Allow the action when the revision the agent claims is current.
+
+    This is a client-supplied ``If-Match`` check. It blocks when the agent makes
+    no claim.
+    """
+    return view.claimed_revision is not None and (
+        view.claimed_revision == view.current_revision
+    )
 
 
 def _state_satisfies(

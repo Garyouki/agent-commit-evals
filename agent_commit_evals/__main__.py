@@ -1,4 +1,4 @@
-"""Run the four-case smoke evaluation."""
+"""Run the six-case smoke evaluation."""
 
 import argparse
 import json
@@ -6,9 +6,10 @@ from dataclasses import asdict
 
 from . import (
     __version__,
+    all_cases,
     allow_all,
+    claimed_revision_guard,
     evaluate,
-    paired_cases,
     revision_guard,
     semantic_guard,
 )
@@ -22,10 +23,10 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--version", action="version", version=__version__)
     args = parser.parse_args(argv)
 
-    cases = paired_cases()
+    cases = all_cases()
     results = {
         guard.__name__: evaluate(guard, cases)
-        for guard in (allow_all, revision_guard, semantic_guard)
+        for guard in (allow_all, claimed_revision_guard, revision_guard, semantic_guard)
     }
     if args.json:
         print(
@@ -42,14 +43,14 @@ def main(argv: list[str] | None = None) -> None:
         return
 
     print(
-        f"Agent Commit Evals {__version__} | two valid and two invalid synthetic cases"
+        f"Agent Commit Evals {__version__} | three valid and three invalid synthetic cases"
     )
     print(
-        f"{'Guard':<18}{'Unsafe commits':>16}{'Unnecessary blocks':>21}{'Safe completions':>19}"
+        f"{'Guard':<24}{'Unsafe commits':>16}{'Unnecessary blocks':>21}{'Safe completions':>19}"
     )
     for name, result in results.items():
         print(
-            f"{name:<18}{result.unsafe_commits:>16}{result.unnecessary_blocks:>21}"
+            f"{name:<24}{result.unsafe_commits:>16}{result.unnecessary_blocks:>21}"
             f"{result.safe_completions:>19}"
         )
 
