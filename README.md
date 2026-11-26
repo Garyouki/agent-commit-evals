@@ -57,6 +57,6 @@ comparison is adapted from the MIT-licensed VP-Control research implementation
 by Zihao Zheng, Baichuan Li, Junyi Yao, and Jiayu Long. The design of the paired
 state changes follows the distinction in the ShiftGuard paper.
 
-- [Engineering Reliable Commit Gates for Agentic AI (VP-Control, arXiv v1)](https://arxiv.org/abs/2609.10969v1)
-- [Stale Does Not Mean Unsafe (ShiftGuard, arXiv v1)](https://arxiv.org/abs/2609.29522v1)
+- [Engineering Reliable Commit Gates for Agentic AI (VP-Control, arXiv)](https://arxiv.org/abs/2609.10969)
+- [Stale Does Not Mean Unsafe (ShiftGuard, arXiv)](https://arxiv.org/abs/2609.29522)
 - [Software citation](CITATION.cff) and [MIT license](LICENSE)
